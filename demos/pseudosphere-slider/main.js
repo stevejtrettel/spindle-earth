@@ -74,7 +74,7 @@ function solveProfile(a) {
   return { points, a };
 }
 
-const initial = solveProfile(0.5);
+const initial = solveProfile(0.25);
 
 const profileCurve = new NumericalCurve({
   points: initial.points,
@@ -122,18 +122,11 @@ function setA(a) {
 const slider = document.getElementById('a-slider');
 const sliderLabel = document.getElementById('slider-label');
 
-function formatLabel(a) {
-  const sMax = Math.acosh(1 / a);
-  return `a = ${a.toFixed(2)}  (arc length = ${sMax.toFixed(2)})`;
-}
-
 slider.addEventListener('input', () => {
   const a = parseFloat(slider.value);
-  sliderLabel.textContent = formatLabel(a);
+  sliderLabel.textContent = `a = ${a.toFixed(2)}`;
   setA(a);
 });
-
-sliderLabel.textContent = formatLabel(0.5);
 
 // --- Animate ---
 
