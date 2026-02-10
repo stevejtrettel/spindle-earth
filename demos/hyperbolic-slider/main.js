@@ -1,13 +1,12 @@
 /**
- * Spindle Earth
+ * Hyperbolic surface of revolution
  *
- * A surface of revolution with constant Gaussian curvature K = +1.
- * Profile: r(s) = a sin(s),  h'(s) = sqrt(1 - a² cos²(s)).
+ * Constant Gaussian curvature K = -1.
+ * Profile: r(s) = a cosh(s),  h'(s) = sqrt(1 - a² sinh²(s)).
+ * A neck at s = 0 that flares into trumpet bells.
  *
- * The parameter a (= sin α, where α is the cone half-angle) controls the shape:
- *   a = 1  →  round sphere
- *   a < 1  →  spindle  (opening angle 2πa)
- *   a > 1  →  barrel
+ * The parameter a controls the waist radius.
+ * s ∈ [-sMax, sMax] where sMax = arcsinh(1/a).
  */
 
 import * as THREE from 'three';
@@ -16,11 +15,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SurfaceMesh } from '@/surfaces/SurfaceMesh.js';
 import { NumericalCurve } from '@/curves/NumericalCurve.js';
 import { quadrature } from '@/ode/quadrature.js';
-
-import wedgeEquirectVert from './shaders/wedge-equirect.vert.glsl?raw';
-import wedgeEquirectFrag from './shaders/wedge-equirect.frag.glsl?raw';
-import earthTextureUrl from '@assets/textures/earth-equirect-nasa.jpg';
-import galaxyTextureUrl from '@assets/textures/galaxy.png';
 
 // --- Scene setup ---
 
@@ -52,33 +46,32 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
 // --- Background ---
 
-const galaxyTexture = new THREE.TextureLoader().load(galaxyTextureUrl);
-galaxyTexture.mapping = THREE.EquirectangularReflectionMapping;
-galaxyTexture.colorSpace = THREE.SRGBColorSpace;
-scene.background = galaxyTexture;
-scene.backgroundIntensity = 0.25;
+scene.background = new THREE.Color(0x0a0a1a);
 
 // --- Profile curve ---
 
-// r(s) = a sin(s),  h(s) = ∫ sqrt(1 - a² cos²(s)) ds
-// a ≤ 1 (spindle/sphere): s ∈ [0, π]         (tip to tip)
-// a > 1 (barrel):         s ∈ [arccos 1/a, π - arccos 1/a]  (edge to edge)
+// r(s) = a cosh(s),  h'(s) = sqrt(1 - a² sinh²(s)),  s ∈ [0, sMax]
+// sMax = arcsinh(1/a)  (where h' → 0)
+// Profile is symmetric about s = 0; integrate top half then mirror.
 
 function solveProfile(a) {
-  const sMin = a <= 1 ? 0 : Math.acos(1 / a);
-  const sMax = Math.PI - sMin;
+  const sMax = Math.asinh(1 / a);
 
   const { ts, values: hValues } = quadrature(
-    s => Math.sqrt(Math.max(0, 1 - a * a * Math.cos(s) ** 2)),
-    sMin, sMax, 400,
+    s => Math.sqrt(Math.max(0, 1 - a * a * Math.sinh(s) ** 2)),
+    0, sMax, 200,
   );
 
-  const totalHeight = hValues[hValues.length - 1];
-  const points = ts.map((s, i) =>
-    new THREE.Vector3(Math.max(0, a * Math.sin(s)), hValues[i] - totalHeight / 2, 0),
+  const topHalf = ts.map((s, i) =>
+    new THREE.Vector3(a * Math.cosh(s), hValues[i], 0),
   );
 
-  return { points, a };
+  // Mirror (skip duplicate at s = 0)
+  const bottomHalf = topHalf.slice(1).reverse().map(p =>
+    new THREE.Vector3(p.x, -p.y, 0),
+  );
+
+  return { points: [...bottomHalf, ...topHalf], a };
 }
 
 const initial = solveProfile(0.5);
@@ -106,39 +99,21 @@ const surface = {
   },
 };
 
-const earthTexture = new THREE.TextureLoader().load(earthTextureUrl);
-earthTexture.colorSpace = THREE.SRGBColorSpace;
-earthTexture.wrapS = THREE.RepeatWrapping;
-earthTexture.needsUpdate = true;
-
-galaxyTexture.wrapS = THREE.RepeatWrapping;
-galaxyTexture.needsUpdate = true;
-
-const lightDir = light.position.clone().normalize();
-
 const mesh = new SurfaceMesh(surface, {
-  roughness: 0.8,
-  metalness: 0.0,
+  color: 0xcc6633,
+  roughness: 0.6,
+  metalness: 0.1,
   uSegments: 96,
   vSegments: 48,
-  vertexShader: wedgeEquirectVert,
-  fragmentShader: wedgeEquirectFrag,
-  uniforms: {
-    uDay: { value: earthTexture },
-    uNight: { value: galaxyTexture },
-    a: { value: initial.a },
-    uLightDir: { value: lightDir },
-  },
 });
 
 scene.add(mesh);
 
-// --- Rebuild for a given value of a ---
+// --- Rebuild for a given waist radius a ---
 
 function setA(a) {
   const { points } = solveProfile(a);
   profileCurve.updatePoints(points);
-  mesh.uniforms.a.value = a;
   mesh.rebuild();
 }
 
@@ -147,11 +122,18 @@ function setA(a) {
 const slider = document.getElementById('a-slider');
 const sliderLabel = document.getElementById('slider-label');
 
+function formatLabel(a) {
+  const stripWidth = 2 * Math.asinh(1 / a);
+  return `a = ${a.toFixed(2)}  (strip width = ${stripWidth.toFixed(2)})`;
+}
+
 slider.addEventListener('input', () => {
   const a = parseFloat(slider.value);
-  sliderLabel.textContent = `a = ${a.toFixed(2)}`;
+  sliderLabel.textContent = formatLabel(a);
   setA(a);
 });
+
+sliderLabel.textContent = formatLabel(0.5);
 
 // --- Animate ---
 
