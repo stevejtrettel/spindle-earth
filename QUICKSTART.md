@@ -52,7 +52,7 @@ scene.background = galaxyTexture;          // image background
 scene.background = new THREE.Color(0x0a0a1a);  // solid color
 ```
 
-Any hex color works. `0x000000` is black, `0xffffff` is white. The galaxy texture is loaded from `assets/textures/galaxy.png`.
+Any hex color works. `0x000000` is black, `0xffffff` is white. The stars texture is loaded from `assets/textures/stars-small.png`.
 
 ### 4. Profile curve (the math)
 

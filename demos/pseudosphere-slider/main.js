@@ -15,6 +15,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SurfaceMesh } from '@/surfaces/SurfaceMesh.js';
 import { NumericalCurve } from '@/curves/NumericalCurve.js';
 import { quadrature } from '@/ode/quadrature.js';
+import { Slider } from '@/ui/Slider.js';
 
 // --- Scene setup ---
 
@@ -119,14 +120,7 @@ function setA(a) {
 
 // --- Slider ---
 
-const slider = document.getElementById('a-slider');
-const sliderLabel = document.getElementById('slider-label');
-
-slider.addEventListener('input', () => {
-  const a = parseFloat(slider.value);
-  sliderLabel.textContent = `a = ${a.toFixed(2)}`;
-  setA(a);
-});
+new Slider({ label: 'a', min: 0.05, max: 0.95, step: 0.01, value: 0.25, onChange: setA });
 
 // --- Animate ---
 

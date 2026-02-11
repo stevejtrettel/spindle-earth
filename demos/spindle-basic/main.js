@@ -14,8 +14,8 @@ import { NumericalCurve } from '@/curves/NumericalCurve.js';
 import { quadrature } from '@/ode/quadrature.js';
 
 import equirectFrag from './shaders/equirect.frag.glsl?raw';
-import earthTextureUrl from '@assets/textures/earth-equirect-nasa.jpg';
-import galaxyTextureUrl from '@assets/textures/galaxy.png';
+import earthTextureUrl from '@assets/textures/earth-large.jpg';
+import galaxyTextureUrl from '@assets/textures/galaxy-med.jpg';
 
 
 // --- Scene setup ---

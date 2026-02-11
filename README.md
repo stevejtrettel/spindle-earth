@@ -87,6 +87,7 @@ demos/
   pseudosphere-slider/   # interactive K=-1 sinh demo
 
 assets/textures/
-  earth-equirect-nasa.jpg
-  galaxy.png
+  earth-large.jpg
+  earth-small.jpg
+  stars-small.png
 ```

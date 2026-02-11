@@ -16,17 +16,19 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SurfaceMesh } from '@/surfaces/SurfaceMesh.js';
 import { NumericalCurve } from '@/curves/NumericalCurve.js';
 import { quadrature } from '@/ode/quadrature.js';
+import { Slider } from '@/ui/Slider.js';
 
 import wedgeEquirectVert from './shaders/wedge-equirect.vert.glsl?raw';
 import wedgeEquirectFrag from './shaders/wedge-equirect.frag.glsl?raw';
-import earthTextureUrl from '@assets/textures/earth-equirect-nasa.jpg';
-import galaxyTextureUrl from '@assets/textures/galaxy.png';
+import earthTextureUrl from '@assets/textures/earth-large.jpg';
+import earthNightUrl from '@assets/textures/earth-night.jpg';
+import galaxyTextureUrl from '@assets/textures/galaxy-med.jpg';
 
 // --- Scene setup ---
 
 const scene = new THREE.Scene();
 
-const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 2, 5);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -111,8 +113,10 @@ earthTexture.colorSpace = THREE.SRGBColorSpace;
 earthTexture.wrapS = THREE.RepeatWrapping;
 earthTexture.needsUpdate = true;
 
-galaxyTexture.wrapS = THREE.RepeatWrapping;
-galaxyTexture.needsUpdate = true;
+const nightTexture = new THREE.TextureLoader().load(earthNightUrl);
+nightTexture.colorSpace = THREE.SRGBColorSpace;
+nightTexture.wrapS = THREE.RepeatWrapping;
+nightTexture.needsUpdate = true;
 
 const lightDir = light.position.clone().normalize();
 
@@ -125,7 +129,7 @@ const mesh = new SurfaceMesh(surface, {
   fragmentShader: wedgeEquirectFrag,
   uniforms: {
     uDay: { value: earthTexture },
-    uNight: { value: galaxyTexture },
+    uNight: { value: nightTexture },
     a: { value: initial.a },
     uLightDir: { value: lightDir },
   },
@@ -144,14 +148,7 @@ function setA(a) {
 
 // --- Slider ---
 
-const slider = document.getElementById('a-slider');
-const sliderLabel = document.getElementById('slider-label');
-
-slider.addEventListener('input', () => {
-  const a = parseFloat(slider.value);
-  sliderLabel.textContent = `a = ${a.toFixed(2)}`;
-  setA(a);
-});
+new Slider({ label: 'a', min: 0.05, max: 2, step: 0.01, value: 0.5, onChange: setA });
 
 // --- Animate ---
 
