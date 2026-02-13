@@ -21,7 +21,7 @@ import { NumericalCurve } from '@/curves/NumericalCurve.js';
 import { quadrature } from '@/ode/quadrature.js';
 import { Slider } from '@/ui/Slider.js';
 
-import fermiGridFrag from './shaders/fermi-grid.frag.glsl?raw';
+import fermiGridFrag from './shaders/geodesic.frag.glsl?raw';
 
 // --- Scene setup ---
 
@@ -112,6 +112,7 @@ const surface = {
 const uniforms = {
   uA:    { value: initialA },
   uSMax: { value: initial.sMax },
+  uTime: { value: 0 },
 };
 
 const mesh = new SurfaceMesh(surface, {
@@ -151,6 +152,7 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const time = clock.getElapsedTime();
+  uniforms.uTime.value = time;
   mesh.rotation.y = time * 0.1;
   controls.update();
   renderer.render(scene, camera);
